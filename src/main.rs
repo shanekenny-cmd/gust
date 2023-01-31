@@ -92,6 +92,22 @@ fn print_score_board(scoreboard: HashMap<String, u32>) {
     }
 }
 
+fn get_player_name() -> String {
+    println!("enter your name: ");
+    let mut player_name = String::new();
+    io::stdin()
+	.read_line(&mut player_name)
+	.expect("Something went wrong");
+    
+    player_name.remove(player_name.len() - 1);
+    if player_name.len() > 7 {
+	println!("7 characters maximum, try again.");
+	return get_player_name();
+    }
+
+    return player_name;
+}
+
 fn main() {
     // get the scoreboard from the file
     let mut scoreboard = HashMap::new();
@@ -101,7 +117,7 @@ fn main() {
     print_score_board(scoreboard.clone());
 
     // TODO: get the player's name
-    let player_name = "therealshane";
+    let mut player_name = get_player_name();
     scoreboard.insert(player_name.to_string(), 0);
     
     println!("\nguess the number!");
@@ -123,7 +139,7 @@ fn main() {
 
 	eval_guess(&mut playing, &mut secret_number, guess, &mut strikes, &mut scoreboard, player_name.to_string());
 
-	let score = scoreboard.get(player_name).expect("player not found");
+	let score = scoreboard.get(&player_name).expect("player not found");
 	println!("Strikes= {}, Score= {}", strikes, score);	
 	if strikes >= 3 {
 	    playing = false;
