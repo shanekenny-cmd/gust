@@ -1,5 +1,6 @@
 use std::io::{self, Write, BufReader, BufRead, Error};
 use std::cmp::Ordering;
+use std::collections::HashMap;
 use rand::Rng;
 use std::fs::File;
 
@@ -18,7 +19,7 @@ fn get_guess() -> u32 {
     return guess;
 }
 
-fn eval_guess(playing: &mut bool, secret_number: &mut u32, guess: u32, strikes: &mut u32, score: &mut u32) {
+fn eval_guess(playing: &mut bool, secret_number: &mut u32, guess: u32, strikes: &mut u32, scoreboard: &mut HashMap<String, u32>, name: String) {
     match guess.cmp(&secret_number) {
 	Ordering::Less => {
 	    println!("Too small!");
@@ -30,14 +31,15 @@ fn eval_guess(playing: &mut bool, secret_number: &mut u32, guess: u32, strikes: 
 	}
 	Ordering::Equal => {
 	    println!("You win!");
-	    *score += 1;
+	    scoreboard.insert(name.clone(), scoreboard.get(&name).expect("player not found") + 1 as u32);
+	    let score = scoreboard.get(&name).expect("player not found");	    
 	    if *score >= 3 {
 		println!("Continue?(y/n)");
 		let mut cont_response = String::new();
 		io::stdin()
 		    .read_line(&mut cont_response)
 		    .expect("Failed to read line");
-		if !cont_response.eq(&String::from("Y")) || !cont_response.eq(&String::from("y")) {
+		if !cont_response.eq(&String::from("Y\n")) && !cont_response.eq(&String::from("y\n")) {
 		    *playing = false;
 		    return;
 		}
@@ -48,26 +50,63 @@ fn eval_guess(playing: &mut bool, secret_number: &mut u32, guess: u32, strikes: 
     }
 }
 
-// fn read_data_file() -> Result<(), Error> {
-//     let path = "game_data.csv";
-//     let input = File::open(path)?;
-//     let buffered = BufReader::new(input);
+fn read_data_file(scoreboard: &mut HashMap<String, u32>) -> Result<(), Error> {
+    let path = "game_data.csv";
+    let input = File::open(path).expect("File not found");
+    let buffered = BufReader::new(input);
 
-//     for line in buffered.lines() {
-// 	println!("{}", line?);
-//     }
+    for line in buffered.lines() {
+	let mut name = String::new();
+	let mut score = String::new();
+	let mut second: bool = false;
 
-//     Ok(())
-// }
+	let line_string = String::from(line?);
+
+	for b in line_string.as_bytes() {
+
+	    if *b == 44 as u8 {
+		second = true;
+		continue;
+	    }
+
+	    if second {
+		// append to score
+		score.push_str(&(*b as char).to_string());
+	    } else {
+		// append to name
+		name.push_str(&(*b as char).to_string());
+	    }
+	}
+	let num_score: u32 = score.trim().parse()
+	    .expect("Something went wrong");
+	scoreboard.insert(name, num_score);
+    }
+
+    Ok(())
+}
+
+fn print_score_board(scoreboard: HashMap<String, u32>) {
+    println!("the scoreboard:");
+    for (name, score) in &scoreboard {
+	println!("{name}: {score}");
+    }
+}
 
 fn main() {
     // get the scoreboard from the file
-    // read_data_file().expect("Failed to read from file");
+    let mut scoreboard = HashMap::new();
     
-    println!("guess the number!");
+    read_data_file(&mut scoreboard).expect("Failed to read from file");
+
+    print_score_board(scoreboard.clone());
+
+    // TODO: get the player's name
+    let player_name = "therealshane";
+    scoreboard.insert(player_name.to_string(), 0);
+    
+    println!("\nguess the number!");
 
     let mut secret_number = rand::thread_rng().gen_range(1..=100);
-    let mut score = 0;
     let mut strikes = 0;
 
     println!("the secret number is: {secret_number}");
@@ -75,16 +114,17 @@ fn main() {
     let mut playing: bool = true;
 
     while playing {
+
 	println!("please input your guess.");
 
 	let guess = get_guess();
 	
 	println!("You guessed: {guess}");
 
-	eval_guess(&mut playing, &mut secret_number, guess, &mut strikes, &mut score);
+	eval_guess(&mut playing, &mut secret_number, guess, &mut strikes, &mut scoreboard, player_name.to_string());
 
-	println!("Strikes= {}, Score= {}", strikes, score);
-	
+	let score = scoreboard.get(player_name).expect("player not found");
+	println!("Strikes= {}, Score= {}", strikes, score);	
 	if strikes >= 3 {
 	    playing = false;
 	}
