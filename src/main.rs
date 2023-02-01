@@ -8,7 +8,7 @@ fn get_guess() -> u32 {
     let mut guess = String::new();
     io::stdin()
     	.read_line(&mut guess)
-    	.expect("Failed to read line");
+       	.expect("Failed to read line");
     let guess: u32 = match guess.trim().parse() {
     	Ok(num) => num,
     	Err(_) => {
@@ -21,32 +21,32 @@ fn get_guess() -> u32 {
 
 fn eval_guess(playing: &mut bool, secret_number: &mut u32, guess: u32, strikes: &mut u32, scoreboard: &mut HashMap<String, u32>, name: String) {
     match guess.cmp(&secret_number) {
-	Ordering::Less => {
-	    println!("Too small!");
-	    *strikes += 1;
-	}
-	Ordering::Greater =>{
-	    println!("Too big!");
-	    *strikes += 1;
-	}
-	Ordering::Equal => {
-	    println!("You win!");
-	    scoreboard.insert(name.clone(), scoreboard.get(&name).expect("player not found") + 1 as u32);
-	    let score = scoreboard.get(&name).expect("player not found");	    
-	    if *score >= 3 {
-		println!("Continue?(y/n)");
-		let mut cont_response = String::new();
-		io::stdin()
-		    .read_line(&mut cont_response)
-		    .expect("Failed to read line");
-		if !cont_response.eq(&String::from("Y\n")) && !cont_response.eq(&String::from("y\n")) {
-		    *playing = false;
-		    return;
-		}
-	    }
-	    *secret_number = rand::thread_rng().gen_range(1..=100);
-	    println!("New random number is {secret_number}");
-	}
+    	Ordering::Less => {
+    	    println!("Too small!");
+    	    *strikes += 1;
+    	}
+    	Ordering::Greater =>{
+    	    println!("Too big!");
+    	    *strikes += 1;
+    	}
+    	Ordering::Equal => {
+    	    println!("You win!");
+    	    scoreboard.insert(name.clone(), scoreboard.get(&name).expect("player not found") + 1 as u32);
+    	    let score = scoreboard.get(&name).expect("player not found");	    
+    	    if *score >= 3 {
+        		println!("Continue?(y/n)");
+        		let mut cont_response = String::new();
+        		io::stdin()
+        		    .read_line(&mut cont_response)
+        		    .expect("Failed to read line");
+        		if !cont_response.eq(&String::from("Y\n")) && !cont_response.eq(&String::from("y\n")) {
+        		    *playing = false;
+        		    return;
+        		}
+    	    }
+    	    *secret_number = rand::thread_rng().gen_range(1..=100);
+    	    println!("New random number is {secret_number}");
+    	}
     }
 }
 
@@ -120,12 +120,10 @@ fn get_player_name(scoreboard: HashMap<String, u32>) -> String {
 }
 
 fn write_data_file(scoreboard: HashMap<String, u32>) -> Result<(), Error> {
-    let mut hash_vec: Vec<(&String, &u32)> = scoreboard.iter().collect();
-    hash_vec.sort_by(|a, b| b.1.cmp(a.1));
     let path = "game_data.csv";
     let mut output = File::create(path).unwrap();
     output.set_len(0).unwrap();
-    for (name, score) in hash_vec {
+    for (name, score) in scoreboard {
         write!(output, "{}, {}\n", name, score).unwrap();
     }
     Ok(())
@@ -139,7 +137,6 @@ fn main() {
 
     print_score_board(scoreboard.clone());
 
-    // TODO: get the player's name
     let player_name = get_player_name(scoreboard.clone());
     scoreboard.insert(player_name.to_string(), 0);
     
