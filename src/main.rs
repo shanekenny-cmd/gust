@@ -87,8 +87,10 @@ fn read_data_file(scoreboard: &mut HashMap<String, u32>) -> Result<(), Error> {
 
 fn print_score_board(scoreboard: HashMap<String, u32>) {
     println!("the scoreboard:");
-    let mut i = 0;
-    for (name, score) in &scoreboard {
+    let mut hash_vec: Vec<(&String, &u32)> = scoreboard.iter().collect();
+    hash_vec.sort_by(|a, b| b.1.cmp(a.1));
+    let i = 0;
+    for (name, score) in hash_vec {
     	println!("{name}: {score}");
         if i > 5 { break; }
     }
@@ -107,7 +109,7 @@ fn get_player_name(scoreboard: HashMap<String, u32>) -> String {
     	return get_player_name(scoreboard);
     }
     match scoreboard.get(&player_name) {
-        Some(score) => {
+        Some(_score) => {
             println!("That name is already taken, be more original.");
             return get_player_name(scoreboard.clone());
         }
@@ -118,13 +120,13 @@ fn get_player_name(scoreboard: HashMap<String, u32>) -> String {
 }
 
 fn write_data_file(scoreboard: HashMap<String, u32>) -> Result<(), Error> {
+    let mut hash_vec: Vec<(&String, &u32)> = scoreboard.iter().collect();
+    hash_vec.sort_by(|a, b| b.1.cmp(a.1));
     let path = "game_data.csv";
-    let mut output = File::create(path)?;
-    for (name, score) in scoreboard {
-        write!(output, "{}", name);
-        write!(output, ", ");
-        write!(output, "{}", score);
-        write!(output, "\n");
+    let mut output = File::create(path).unwrap();
+    output.set_len(0).unwrap();
+    for (name, score) in hash_vec {
+        write!(output, "{}, {}\n", name, score).unwrap();
     }
     Ok(())
 }
@@ -138,7 +140,7 @@ fn main() {
     print_score_board(scoreboard.clone());
 
     // TODO: get the player's name
-    let mut player_name = get_player_name(scoreboard.clone());
+    let player_name = get_player_name(scoreboard.clone());
     scoreboard.insert(player_name.to_string(), 0);
     
     println!("\nguess the number!");
