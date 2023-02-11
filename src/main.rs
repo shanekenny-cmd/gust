@@ -145,13 +145,11 @@ fn main() {
     let mut secret_number = rand::thread_rng().gen_range(1..=100);
     let mut strikes = 0;
 
-    println!("the secret number is: {secret_number}");
-
     let mut playing: bool = true;
 
     while playing {
 
-    	println!("please input your guess.");
+    	 println!("please input your guess.");
 
     	let guess = get_guess();
 	
